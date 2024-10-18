@@ -7,8 +7,10 @@
 #include <QChartView>
 #include <QChart>
 #include <QTimer>
+#include <QThread>
 #include "ResidualPlot.h"
 #include "ResultPlot.h"
+#include "CipherRunner.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -27,7 +29,8 @@ public:
 private:
     Ui::MainWindow* ui;
 
-    QProcess* process;
+    CipherRunner* cipherRunner;
+    QThread* thread;
     QTimer* timer;
     QButtonGroup* slidergroup;
 
@@ -38,8 +41,8 @@ private:
 
     void initialUi();
     void showinLogger(const QByteArray& log);
-    void onReadStandardOutput();
-    void onReadErrors();
+    void onReadStandardOutput(const QByteArray& Message);
+    void onReadErrors(const QByteArray& Errors);
     void onRunButtonClicked();
 };
 

@@ -9,19 +9,22 @@ QT_CHARTS_USE_NAMESPACE
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
             ui(new Ui::MainWindow),
+            thread(new QThread(this)),
+            cipherRunner(new CipherRunner(this)),
             timer(new QTimer(this)),
             residualPlotter(new ResidualPlotter),
             resultPlotter(new ResultPlotter),
             slidergroup(new QButtonGroup(this))
             {
     ui->setupUi(this);
-    process = new QProcess(this);
+
+    cipherRunner->moveToThread(thread);
     residualPlotterView = new QChartView(this);
     resultPlotterView = new QChartView(this);
     initialUi();
     connect(ui->RunButton,&QPushButton::clicked,this,&MainWindow::onRunButtonClicked);
-    connect(process,&QProcess::readyReadStandardOutput,this,&MainWindow::onReadStandardOutput);
-    connect(process,&QProcess::readyReadStandardError,this,&MainWindow::onReadErrors);
+    connect(cipherRunner,&CipherRunner::messageToLog,this,&MainWindow::onReadStandardOutput);
+    connect(cipherRunner,&CipherRunner::errorToLog,this,&MainWindow::onReadErrors);
     connect(timer,&QTimer::timeout,residualPlotter,&ResidualPlotter::updateResidualPlot);
 }
 
@@ -56,7 +59,7 @@ void MainWindow::onRunButtonClicked() {
     timer->setInterval(1000);
     timer->start();
     showinLogger("cipher start");
-    process->start("mpirun",QStringList()<<"-np"<<"10"<<"./cipher-1.0.5");
+    cipherRunner->runCipher();
 }
 
 void MainWindow::showinLogger(const QByteArray& log) {
@@ -64,12 +67,12 @@ void MainWindow::showinLogger(const QByteArray& log) {
     ui->Log->appendPlainText(logRead);
 }
 
-void MainWindow::onReadStandardOutput() {
-    showinLogger(process->readAllStandardOutput());
+void MainWindow::onReadStandardOutput(const QByteArray &Message) {
+    showinLogger(Message);
 }
 
-void MainWindow::onReadErrors() {
-    QString errorOutput = QString::fromUtf8(process->readAllStandardError());
+void MainWindow::onReadErrors(const QByteArray &Errors)  {
+    QString errorOutput = QString::fromUtf8(Errors);
     QStringList lines = errorOutput.split("\n");
 
     for(const QString& line: lines){

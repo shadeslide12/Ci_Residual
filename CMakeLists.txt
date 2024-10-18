@@ -24,6 +24,7 @@ set(SRC_FILES
         mainwindow.cpp
         ResidualPlot.cpp
         ResultPlot.cpp
+        CipherRunner.cpp
 )
 
 message(STATUS "UI_FILES: ${UI_FILES}")
