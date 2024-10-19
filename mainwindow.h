@@ -30,7 +30,6 @@ private:
     Ui::MainWindow* ui;
 
     CipherRunner* cipherRunner;
-    QThread* thread;
     QTimer* timer;
     QButtonGroup* slidergroup;
 

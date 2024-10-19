@@ -13,7 +13,7 @@ CipherRunner::CipherRunner(QWidget *parent) :
 
 void CipherRunner::runCipher() {
     QStringList argument;
-    argument << "-np" << "10" << "./cipher-1.0.5";
+    argument << "-np" << "4" << "./cipher-1.0.5";
     pro_cipher->start("mpirun",argument);
 }
 

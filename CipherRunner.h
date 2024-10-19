@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QProcess>
+
 class CipherRunner: public QObject{
 Q_OBJECT
 

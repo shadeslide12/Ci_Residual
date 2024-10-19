@@ -9,7 +9,6 @@ QT_CHARTS_USE_NAMESPACE
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
             ui(new Ui::MainWindow),
-            thread(new QThread(this)),
             cipherRunner(new CipherRunner(this)),
             timer(new QTimer(this)),
             residualPlotter(new ResidualPlotter),
@@ -18,7 +17,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
             {
     ui->setupUi(this);
 
-    cipherRunner->moveToThread(thread);
     residualPlotterView = new QChartView(this);
     resultPlotterView = new QChartView(this);
     initialUi();
