@@ -12,8 +12,10 @@ CipherRunner::CipherRunner(QWidget *parent) :
     connect(pro_cipher,&QProcess::readyReadStandardOutput,this,&CipherRunner::updateLogger);
     connect(pro_cipher,&QProcess::readyReadStandardError,this,&CipherRunner::recordError);
     connect(pro_cipher,QOverload<int,QProcess::ExitStatus>::of(&QProcess::finished),
-            [this](int exitCode,QProcess::ExitStatus){
+            [this](int exitCode,QProcess::ExitStatus exitStatus){
                 timer->stop();
+                emit cal_Finished(exitCode,exitStatus);
+                emit s_UpdateTable();
             });
     connect(timer,&QTimer::timeout,this,&CipherRunner::updateResidual);
 }
@@ -58,3 +60,5 @@ void CipherRunner::updateResidual() {
     }
     emit s_UpdateResidual(iteration,convergence1,convergence2);
 }
+
+

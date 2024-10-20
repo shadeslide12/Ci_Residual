@@ -10,7 +10,6 @@ QT_CHARTS_USE_NAMESPACE
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
             ui(new Ui::MainWindow),
             cipherRunner(new CipherRunner(this)),
-            timer(new QTimer(this)),
             residualPlotter(new ResidualPlotter),
             resultPlotter(new ResultPlotter),
             slidergroup(new QButtonGroup(this))
@@ -28,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(cipherRunner,&CipherRunner::errorToLog,this,&MainWindow::onReadErrors);
     //connect(timer,&QTimer::timeout,residualPlotter,&ResidualPlotter::updateResidualPlot);
     connect(cipherRunner, &CipherRunner::s_UpdateResidual, residualPlotter, &ResidualPlotter::updateResidualPlot);
+    connect(cipherRunner,&CipherRunner::cal_Finished,this, &MainWindow::onCal_Finished);
+    connect(cipherRunner,&CipherRunner::s_UpdateTable,this,&MainWindow::onUpdateTable);
 }
 
 MainWindow::~MainWindow(){
@@ -56,12 +57,25 @@ void MainWindow::initialUi(){
 
 void MainWindow::onRunButtonClicked() {
     qDebug()<<"cipher started";
-    ui->RunButton->setEnabled(false);
-    ui->Log->clear();
-    timer->setInterval(1000);
-    timer->start();
-    showinLogger("cipher start");
-    cipherRunner->runCipher();
+    if(currentIndex_Pressure >= pressureList.size()){
+        showinLogger("All calculations completed.\n");
+        ui->RunButton->setEnabled(true);
+        return;
+    }
+
+    int currentPressure = pressureList[currentIndex_Pressure];
+
+    if(updatePressure(currentPressure)){
+        qDebug()<< "Calculating pressure: "<<currentPressure;
+        ui->RunButton->setEnabled(false);
+        ui->Log->clear();
+        showinLogger("cipher start， Pressure is"+QByteArray::number(currentPressure));
+        cipherRunner->runCipher();
+    }else{
+        showinLogger("Failed to update outlet.dat");
+        ui->RunButton->setEnabled(true);
+    }
+
 }
 
 void MainWindow::showinLogger(const QByteArray& log) {
@@ -87,15 +101,14 @@ bool MainWindow::updatePressure(int pressure) {
     if(!outletFile.open(QIODevice::ReadWrite | QIODevice::Text)){
         return false;
     }
-
+    qDebug()<<"file open successfully";
     QTextStream in(&outletFile);
     QString content = in.readAll();
-    outletFile.resize(0);
-
     QTextStream out(&outletFile);
-    QStringList lines = content.split("\n");
+    QStringList lines = content.split("\n",Qt::SkipEmptyParts);
+    qDebug()<<"content read successfully";
 
-    for(int i=0;i<lines.size();++i){
+    for(int i=1;i<lines.size();++i){
         QStringList data = lines[i].split(" ",Qt::SkipEmptyParts);
 
         data[1] = QString::number(pressure);
@@ -107,6 +120,20 @@ bool MainWindow::updatePressure(int pressure) {
 
     outletFile.close();
     return true;
+}
 
+void MainWindow::onCal_Finished(int exitCode, QProcess::ExitStatus exitStatus) {
+    if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+        showinLogger("Calculation completed successfully for Pressure: "
+                        +QByteArray::number(pressureList[currentIndex_Pressure]));
+    }else{
+        showinLogger("Calculation Failed");
+    }
+    currentIndex_Pressure++;
+    onRunButtonClicked();
+
+}
+
+void MainWindow::onUpdateTable() {
 
 }

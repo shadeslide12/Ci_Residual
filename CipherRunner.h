@@ -18,10 +18,9 @@ public:
 signals:
     void messageToLog(const QByteArray& message);
     void errorToLog(const QByteArray& error);
-    void finished();
-    void s_UpdateResidual(const QVector<double>& iteration,
-                          const QVector<double>& convergence1,
-                          const QVector<double>& convergence2);
+    void cal_Finished(int exitCode ,QProcess::ExitStatus exitStatus);
+    void s_UpdateResidual(const QVector<double>& iteration,const QVector<double>& convergence1,const QVector<double>& convergence2);
+    void s_UpdateTable();
 private:
     QProcess* pro_cipher;
     QTimer* timer;

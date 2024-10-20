@@ -30,7 +30,6 @@ private:
     Ui::MainWindow* ui;
 
     CipherRunner* cipherRunner;
-    QTimer* timer;
     QButtonGroup* slidergroup;
 
     QChartView* residualPlotterView;
@@ -45,8 +44,11 @@ private:
     void showinLogger(const QByteArray& log);
     void onReadStandardOutput(const QByteArray& Message);
     void onReadErrors(const QByteArray& Errors);
+    void onUpdateTable();
+
     void onRunButtonClicked();
 
+    void onCal_Finished(int exitCode, QProcess::ExitStatus exitStatus);
     bool updatePressure(int pressure);
 };
 
