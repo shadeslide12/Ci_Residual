@@ -38,11 +38,16 @@ private:
     ResidualPlotter* residualPlotter;
     ResultPlotter* resultPlotter;
 
+    QVector<int> pressureList;
+    int currentIndex_Pressure;
+
     void initialUi();
     void showinLogger(const QByteArray& log);
     void onReadStandardOutput(const QByteArray& Message);
     void onReadErrors(const QByteArray& Errors);
     void onRunButtonClicked();
+
+    bool updatePressure(int pressure);
 };
 
 

@@ -17,13 +17,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
             {
     ui->setupUi(this);
 
+    pressureList = {100000,110000,120000};
+    currentIndex_Pressure = 0;
+
     residualPlotterView = new QChartView(this);
     resultPlotterView = new QChartView(this);
     initialUi();
     connect(ui->RunButton,&QPushButton::clicked,this,&MainWindow::onRunButtonClicked);
     connect(cipherRunner,&CipherRunner::messageToLog,this,&MainWindow::onReadStandardOutput);
     connect(cipherRunner,&CipherRunner::errorToLog,this,&MainWindow::onReadErrors);
-    connect(timer,&QTimer::timeout,residualPlotter,&ResidualPlotter::updateResidualPlot);
+    //connect(timer,&QTimer::timeout,residualPlotter,&ResidualPlotter::updateResidualPlot);
+    connect(cipherRunner, &CipherRunner::s_UpdateResidual, residualPlotter, &ResidualPlotter::updateResidualPlot);
 }
 
 MainWindow::~MainWindow(){
@@ -76,4 +80,33 @@ void MainWindow::onReadErrors(const QByteArray &Errors)  {
     for(const QString& line: lines){
         qDebug()<<line;
     }
+}
+
+bool MainWindow::updatePressure(int pressure) {
+    QFile outletFile("./BC_files/r67-outflow-outlet.dat");
+    if(!outletFile.open(QIODevice::ReadWrite | QIODevice::Text)){
+        return false;
+    }
+
+    QTextStream in(&outletFile);
+    QString content = in.readAll();
+    outletFile.resize(0);
+
+    QTextStream out(&outletFile);
+    QStringList lines = content.split("\n");
+
+    for(int i=0;i<lines.size();++i){
+        QStringList data = lines[i].split(" ",Qt::SkipEmptyParts);
+
+        data[1] = QString::number(pressure);
+        lines[i] = data.join("  ");
+    }
+
+    outletFile.resize(0);
+    out<<lines.join("\n");
+
+    outletFile.close();
+    return true;
+
+
 }

@@ -7,13 +7,13 @@ ResidualPlotter::ResidualPlotter(QWidget* parent):
         axisY1(new QValueAxis(this)),
         axisY2(new QValueAxis(this))
 {
-    currentIteration = 0;
+    //currentIteration = 0;
     setupResidualPlot();
 }
 
 void ResidualPlotter::setupResidualPlot() {
     QFont titleFont("Arial",16,QFont::Bold);
-    QColor titleColor("Qt::darkBlue");
+    QColor titleColor(Qt::darkBlue);
     setTitle("Residual Curves");
     setTitleFont(titleFont);
     setTitleBrush(titleColor);
@@ -35,11 +35,26 @@ void ResidualPlotter::setupResidualPlot() {
 
 }
 
-void ResidualPlotter::updateResidualPlot() {
-    series_con1->append(currentIteration,currentIteration);
-    currentIteration++;
-    axisX->setRange(0,100);
-    axisY1->setRange(0,100);
+void ResidualPlotter::updateResidualPlot(const QVector<double> &iteration, const QVector<double> &convergence1,
+                                         const QVector<double> &convergence2)  {
+
+    series_con1->clear();
+    series_con2->clear();
+
+    for(int i =0; i<iteration.size();++i){
+        series_con1->append(iteration[i],convergence1[i]);
+        series_con2->append(iteration[i],convergence2[i]);
+    }
+
+    if(!iteration.isEmpty()){
+        int maxIter = *std::max_element(iteration.begin(), iteration.end());
+        double maxCon1 = *std::max_element(convergence1.begin(), convergence1.end());
+        double maxCon2 = *std::max_element(convergence2.begin(), convergence2.end());
+
+        axisX->setRange(0,maxIter+4);
+    }
+    axisY1->setRange(-8.2,-7);
+    axisY2->setRange(-11.5,-10.5);
 
     this->update();
 }
