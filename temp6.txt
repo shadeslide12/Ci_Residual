@@ -1,0 +1,44 @@
+// 方法3：使用QTextStream的readLineFromLastLine方法（Qt 5.15以上版本）
+QString readLastLine3(const QString& fileName) {
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return QString();
+
+    QTextStream in(&file);
+    return in.readLine(file.size()); // 讀取最後一行
+}
+
+// 使用示例
+void extract_data(double pressure) {
+    // 讀取第一個文件的最後一行
+    QString lastLine = readLastLine(settings.mon_outlet);
+    if (!lastLine.isEmpty()) {
+        QStringList parts = lastLine.split(" ", Qt::SkipEmptyParts);
+        double mdot = parts.last().toDouble();
+
+        // 讀取第二個文件的最後一行
+        lastLine = readLastLine(settings.mon_perf);
+        if (!lastLine.isEmpty()) {
+            parts = lastLine.split(" ", Qt::SkipEmptyParts);
+            double pratio = parts[1].toDouble();
+            double tratio = parts[2].toDouble();
+            double efficiency = parts[3].toDouble() / 100.0;
+
+            // 添加結果
+            settings.add_result(pressure, mdot, pratio, tratio, efficiency);
+
+            // 寫入結果文件
+            QFile resultFile(settings.result_txt);
+            if (resultFile.open(QIODevice::Append | QIODevice::Text)) {
+                QTextStream out(&resultFile);
+                out << QString("%1 %2 %3 %4 %5\n")
+                    .arg(pressure)
+                    .arg(mdot)
+                    .arg(pratio)
+                    .arg(tratio)
+                    .arg(efficiency);
+                resultFile.close();
+            }
+        }
+    }
+}

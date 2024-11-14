@@ -1,0 +1,162 @@
+#include <QChart>
+#include <QLineSeries>
+#include <QValueAxis>
+#include <QTimer>
+#include <QPushButton>
+
+class ResidualPlotter : public QChart {
+    Q_OBJECT
+
+public:
+    ResidualPlotter(QGraphicsItem *parent = nullptr, Qt::WindowFlags wFlags = Qt::WindowFlags());
+    ~ResidualPlotter();
+
+    void setupResidualPlot();
+    void setAxisRanges(double xMin, double xMax, double y1Min, double y1Max, double y2Min, double y2Max);
+
+public slots:
+    void startPlotting();
+    void stopPlotting();
+
+private slots:
+    void updateResidualPlot();
+
+private:
+    QLineSeries *series_con1;
+    QLineSeries *series_con2;
+    QValueAxis *axisX;
+    QValueAxis *axisY1;
+    QValueAxis *axisY2;
+    QTimer *updateTimer;
+    int currentIteration;
+    QPushButton *startButton;
+    QPushButton *stopButton;
+
+    void resetPlot();
+};
+
+// ResidualPlotter.cpp
+
+#include "ResidualPlotter.h"
+#include <QtMath>
+
+ResidualPlotter::ResidualPlotter(QGraphicsItem *parent, Qt::WindowFlags wFlags)
+    : QChart(parent, wFlags), currentIteration(0) {
+    series_con1 = new QLineSeries(this);
+    series_con2 = new QLineSeries(this);
+    axisX = new QValueAxis(this);
+    axisY1 = new QValueAxis(this);
+    axisY2 = new QValueAxis(this);
+    updateTimer = new QTimer(this);
+
+    setupResidualPlot();
+
+    connect(updateTimer, &QTimer::timeout, this, &ResidualPlotter::updateResidualPlot);
+
+    startButton = new QPushButton("Start", this);
+    stopButton = new QPushButton("Stop", this);
+    stopButton->setEnabled(false);
+
+    connect(startButton, &QPushButton::clicked, this, &ResidualPlotter::startPlotting);
+    connect(stopButton, &QPushButton::clicked, this, &ResidualPlotter::stopPlotting);
+
+    // 将按钮添加到图表
+    QGraphicsProxyWidget* proxyStart = new QGraphicsProxyWidget(this);
+    proxyStart->setWidget(startButton);
+    QGraphicsProxyWidget* proxyStop = new QGraphicsProxyWidget(this);
+    proxyStop->setWidget(stopButton);
+
+    this->setLayout(new QGraphicsLinearLayout(Qt::Horizontal));
+    this->layout()->addItem(proxyStart);
+    this->layout()->addItem(proxyStop);
+}
+
+ResidualPlotter::~ResidualPlotter() {
+    delete series_con1;
+    delete series_con2;
+    delete axisX;
+    delete axisY1;
+    delete axisY2;
+    delete updateTimer;
+    delete startButton;
+    delete stopButton;
+}
+
+void ResidualPlotter::setupResidualPlot() {
+    this->addSeries(series_con1);
+    this->addSeries(series_con2);
+
+    this->addAxis(axisX, Qt::AlignBottom);
+    this->addAxis(axisY1, Qt::AlignLeft);
+    this->addAxis(axisY2, Qt::AlignRight);
+
+    series_con1->attachAxis(axisX);
+    series_con1->attachAxis(axisY1);
+    series_con2->attachAxis(axisX);
+    series_con2->attachAxis(axisY2);
+
+    axisX->setTitleText("Iteration");
+    axisY1->setTitleText("Conver_N-S");
+    axisY2->setTitleText("Conver_Momum");
+
+    axisX->setGridLineVisible(true);
+    axisY1->setGridLineVisible(true);
+    axisY2->setGridLineVisible(true);
+
+    axisX->setTickCount(6);
+    axisY1->setTickCount(6);
+    axisY2->setTickCount(6);
+
+    axisY1->setLabelFormat("%.2f");
+    axisY2->setLabelFormat("%.2f");
+
+    setAxisRanges(0, 100, 0, 10000, 0, 10);
+}
+
+void ResidualPlotter::setAxisRanges(double xMin, double xMax, double y1Min, double y1Max, double y2Min, double y2Max) {
+    axisX->setRange(xMin, xMax);
+    axisY1->setRange(y1Min, y1Max);
+    axisY2->setRange(y2Min, y2Max);
+}
+
+void ResidualPlotter::startPlotting() {
+    resetPlot();
+    updateTimer->start(100);  // 每100毫秒更新一次
+    startButton->setEnabled(false);
+    stopButton->setEnabled(true);
+}
+
+void ResidualPlotter::stopPlotting() {
+    updateTimer->stop();
+    startButton->setEnabled(true);
+    stopButton->setEnabled(false);
+}
+
+void ResidualPlotter::resetPlot() {
+    currentIteration = 0;
+    series_con1->clear();
+    series_con2->clear();
+}
+
+void ResidualPlotter::updateResidualPlot() {
+    if (currentIteration >= 100) {
+        stopPlotting();
+        return;
+    }
+
+    currentIteration++;
+
+    double y1 = currentIteration * currentIteration;
+    double y2 = qSqrt(currentIteration);
+
+    series_con1->append(currentIteration, y1);
+    series_con2->append(currentIteration, y2);
+
+    // 动态调整Y轴范围
+    double maxY1 = series_con1->at(series_con1->count() - 1).y();
+    double maxY2 = series_con2->at(series_con2->count() - 1).y();
+
+    setAxisRanges(0, 100, 0, maxY1 * 1.1, 0, maxY2 * 1.1);
+
+    this->update();  // 强制重绘图表
+}

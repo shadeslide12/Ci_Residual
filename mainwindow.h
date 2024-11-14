@@ -11,6 +11,7 @@
 #include "ResidualPlot.h"
 #include "ResultPlot.h"
 #include "CipherRunner.h"
+#include "setting.h"
 
 QT_CHARTS_USE_NAMESPACE
 
@@ -25,11 +26,11 @@ public:
     explicit MainWindow(QWidget* parent=nullptr);
     ~MainWindow() override;
 
-
 private:
     Ui::MainWindow* ui;
 
     CipherRunner* cipherRunner;
+    Setting* setting;
     QButtonGroup* slidergroup;
 
     QChartView* residualPlotterView;
@@ -44,9 +45,15 @@ private:
     void showinLogger(const QByteArray& log);
     void onReadStandardOutput(const QByteArray& Message);
     void onReadErrors(const QByteArray& Errors);
-    void onUpdateTable();
+    void updateTable();
+    void updateResultPlot();
 
     void onRunButtonClicked();
+    void onWorkDirButtonClicked();
+    void onCipherDirButtonClicked();
+    void onRunCoreButtonClicked();
+    void onAddPressureButtonClicked();
+    void onClearPressureButtonClicked();
 
     void onCal_Finished(int exitCode, QProcess::ExitStatus exitStatus);
     bool updatePressure(int pressure);

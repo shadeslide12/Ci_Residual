@@ -25,6 +25,7 @@ set(SRC_FILES
         ResidualPlot.cpp
         ResultPlot.cpp
         CipherRunner.cpp
+        setting.cpp
 )
 
 message(STATUS "UI_FILES: ${UI_FILES}")
@@ -47,3 +48,5 @@ target_link_libraries(QtTest PRIVATE
         Qt5::Widgets
         Qt5::Charts
 )
+
+add_subdirectory(ui_show)

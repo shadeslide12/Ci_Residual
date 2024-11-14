@@ -1,0 +1,76 @@
+#include <QObject>
+#include <QProcess>
+#include <QFile>
+#include <QTextStream>
+#include <QVector>
+#include <QFileSystemWatcher>
+#include <QTimer>
+
+class ThrottledCipherRunner : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit ThrottledCipherRunner(QObject *parent = nullptr);
+    ~ThrottledCipherRunner();
+    void runCipher();
+
+signals:
+    void updateResidual(const QVector<double>& iterations,
+                        const QVector<double>& convergence1,
+                        const QVector<double>& convergence2);
+    void finished();
+
+private slots:
+    void onHistFileChanged(const QString& path);
+    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessError(QProcess::ProcessError error);
+    void checkHistFileThrottled();
+
+private:
+    QProcess* process;
+    QString histFilePath;
+    int runCore;
+    QString cipherPath;
+    QFileSystemWatcher* fileWatcher;
+    qint64 lastPosition;
+    QTimer* throttleTimer;
+    bool fileChangedSinceLastCheck;
+
+    void setupProcess();
+    void checkHistFile();
+};
+
+ThrottledCipherRunner::ThrottledCipherRunner(QObject *parent) : QObject(parent),
+    process(new QProcess(this)),
+    histFilePath("path/to/hist/file"),
+    runCore(4),
+    cipherPath("path/to/cipher/executable"),
+    fileWatcher(new QFileSystemWatcher(this)),
+    lastPosition(0),
+    throttleTimer(new QTimer(this)),
+    fileChangedSinceLastCheck(false)
+{
+    setupProcess();
+    fileWatcher->addPath(histFilePath);
+    connect(fileWatcher, &QFileSystemWatcher::fileChanged, this, &ThrottledCipherRunner::onHistFileChanged);
+
+    throttleTimer->setSingleShot(true);
+    connect(throttleTimer, &QTimer::timeout, this, &ThrottledCipherRunner::checkHistFileThrottled);
+}
+
+void ThrottledCipherRunner::onHistFileChanged(const QString& path)
+{
+    fileChangedSinceLastCheck = true;
+    if (!throttleTimer->isActive()) {
+        throttleTimer->start(100); // 100毫秒的節流時間
+    }
+}
+
+void ThrottledCipherRunner::checkHistFileThrottled()
+{
+    if (fileChangedSinceLastCheck) {
+        checkHistFile();
+        fileChangedSinceLastCheck = false;
+    }
+}

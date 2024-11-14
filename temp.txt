@@ -1,0 +1,21 @@
+class ProcessHandler : public QObject
+{
+    Q_OBJECT
+public:
+    void runProcess() {
+        QProcess process;
+        process.start("long_running_command");
+        process.waitForFinished(-1);
+        emit processFinished(process.exitCode());
+    }
+signals:
+    void processFinished(int exitCode);
+};
+
+// 在主線程中
+ProcessHandler *handler = new ProcessHandler;
+QThread *thread = new QThread;
+handler->moveToThread(thread);
+connect(thread, &QThread::started, handler, &ProcessHandler::runProcess);
+connect(handler, &ProcessHandler::processFinished, this, &MainWindow::handleResult);
+thread->start();

@@ -1,0 +1,45 @@
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    thread(new QThread(this)),
+    cipherRunner(new CipherRunner())
+{
+    ui->setupUi(this);
+
+    // 将 cipherRunner 移动到新线程
+    cipherRunner->moveToThread(thread);
+
+    // 启动线程
+    thread->start();
+
+    // 连接信号和槽
+    connect(this, &MainWindow::startCipher, cipherRunner, &CipherRunner::runCipher);
+    connect(cipherRunner, &CipherRunner::s_MessageToLog, this, &MainWindow::onReadStandardOutput);
+    connect(cipherRunner, &CipherRunner::s_ErrorToLog, this, &MainWindow::onReadErrors);
+
+    // 当任务完成时，让线程退出
+    connect(cipherRunner, &CipherRunner::taskFinished, thread, &QThread::quit);
+
+    // 在线程结束时，删除 cipherRunner
+    connect(thread, &QThread::finished, cipherRunner, &QObject::deleteLater);
+
+    connect(ui->RunButton, &QPushButton::clicked, this, &MainWindow::onRunButtonClicked);
+}
+
+MainWindow::~MainWindow()
+{
+    // 确保线程正确退出
+    thread->quit();
+    thread->wait();
+
+    delete ui;
+}
+
+void MainWindow::onRunButtonClicked()
+{
+    qDebug() << "Cipher started";
+    ui->RunButton->setEnabled(false);
+    ui->Log->clear();
+
+    emit startCipher();
+}

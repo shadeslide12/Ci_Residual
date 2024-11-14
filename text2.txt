@@ -1,0 +1,53 @@
+#include "mainwindow.h"
+#include "ui_MainWindow.h"
+#include <QDebug>
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    thread(new QThread(this)),
+    cipherRunner(new CipherRunner())
+{
+    ui->setupUi(this);
+
+    // Move cipherRunner to the new thread
+    cipherRunner->moveToThread(thread);
+
+    // Start the thread
+    thread->start();
+
+    // Connect signals and slots
+    connect(ui->RunButton, &QPushButton::clicked, this, &MainWindow::onRunButtonClicked);
+    connect(this, &MainWindow::startCipher, cipherRunner, &CipherRunner::runCipher);
+    connect(cipherRunner, &CipherRunner::s_MessageToLog, this, &MainWindow::onReadStandardOutput);
+    connect(cipherRunner, &CipherRunner::s_ErrorToLog, this, &MainWindow::onReadErrors);
+
+    // Ensure proper cleanup
+    connect(thread, &QThread::finished, cipherRunner, &QObject::deleteLater);
+}
+
+MainWindow::~MainWindow()
+{
+    thread->quit();
+    thread->wait();
+    delete ui;
+}
+
+void MainWindow::onRunButtonClicked()
+{
+    qDebug() << "Cipher started";
+    ui->RunButton->setEnabled(false);
+    ui->Log->clear();
+    // Start any timers or additional processes
+    emit startCipher();
+}
+
+void MainWindow::onReadStandardOutput(const QByteArray &message)
+{
+    ui->Log->appendPlainText(QString::fromUtf8(message));
+}
+
+void MainWindow::onReadErrors(const QByteArray &errors)
+{
+    ui->Log->appendPlainText(QString::fromUtf8(errors));
+}

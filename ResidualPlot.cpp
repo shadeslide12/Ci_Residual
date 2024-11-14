@@ -50,11 +50,12 @@ void ResidualPlotter::updateResidualPlot(const QVector<double> &iteration, const
         int maxIter = *std::max_element(iteration.begin(), iteration.end());
         double maxCon1 = *std::max_element(convergence1.begin(), convergence1.end());
         double maxCon2 = *std::max_element(convergence2.begin(), convergence2.end());
-
+        double minCon1 = *std::min_element(convergence1.begin(),convergence1.end());
+        double minCon2 = *std::min_element(convergence2.begin(),convergence2.end());
         axisX->setRange(0,maxIter+4);
+        axisY1->setRange(minCon1,maxCon1);
+        axisY2->setRange(minCon2,maxCon2);
     }
-    axisY1->setRange(-8.2,-7);
-    axisY2->setRange(-11.5,-10.5);
 
     this->update();
 }

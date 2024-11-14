@@ -1,0 +1,71 @@
+#include <QMainWindow>
+#include <QTimer>
+#include "ResidualPlotter.h"
+
+class MainWindow : public QMainWindow {
+    Q_OBJECT
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+private slots:
+    void startPlotting();
+    void stopPlotting();
+
+private:
+    ResidualPlotter *residualPlotter;
+    QTimer *plotTimer;
+    QPushButton *startButton;
+    QPushButton *stopButton;
+};
+
+// MainWindow.cpp
+
+#include "MainWindow.h"
+#include <QVBoxLayout>
+#include <QPushButton>
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent) {
+
+    QWidget *centralWidget = new QWidget(this);
+    setCentralWidget(centralWidget);
+
+    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+
+    residualPlotter = new ResidualPlotter(this);
+    layout->addWidget(residualPlotter);
+
+    startButton = new QPushButton("Start", this);
+    stopButton = new QPushButton("Stop", this);
+    stopButton->setEnabled(false);
+
+    layout->addWidget(startButton);
+    layout->addWidget(stopButton);
+
+    plotTimer = new QTimer(this);
+    plotTimer->setInterval(100);  // 每100毫秒更新一次
+
+    connect(plotTimer, &QTimer::timeout, residualPlotter, &ResidualPlotter::updatePlot);
+    connect(startButton, &QPushButton::clicked, this, &MainWindow::startPlotting);
+    connect(stopButton, &QPushButton::clicked, this, &MainWindow::stopPlotting);
+}
+
+MainWindow::~MainWindow() {
+    delete plotTimer;
+}
+
+void MainWindow::startPlotting() {
+    residualPlotter->startPlotting();
+    plotTimer->start();
+    startButton->setEnabled(false);
+    stopButton->setEnabled(true);
+}
+
+void MainWindow::stopPlotting() {
+    plotTimer->stop();
+    residualPlotter->stopPlotting();
+    startButton->setEnabled(true);
+    stopButton->setEnabled(false);
+}
