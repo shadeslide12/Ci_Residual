@@ -8,6 +8,11 @@ ResidualPlotter::ResidualPlotter(QWidget* parent):
         axisY2(new QValueAxis(this))
 {
     //currentIteration = 0;
+    minCon1 = std::numeric_limits<double>::max();
+    maxCon1 = std::numeric_limits<double>::min();
+    minCon2 = std::numeric_limits<double>::max();
+    maxCon2 = std::numeric_limits<double>::min();
+    maxIteration = 0;
     setupResidualPlot();
 }
 
@@ -32,30 +37,25 @@ void ResidualPlotter::setupResidualPlot() {
     axisX->setTitleText("Iteration");
     axisY1->setTitleText("Conver_N-S");
     axisY2->setTitleText("Conver_Momum");
-
 }
 
-void ResidualPlotter::updateResidualPlot(const QVector<double> &iteration, const QVector<double> &convergence1,
-                                         const QVector<double> &convergence2)  {
+void ResidualPlotter::updateResidualPlot(const int& iteration, const double& convergence1,
+                                         const double& convergence2)  {
 
-    series_con1->clear();
-    series_con2->clear();
 
-    for(int i =0; i<iteration.size();++i){
-        series_con1->append(iteration[i],convergence1[i]);
-        series_con2->append(iteration[i],convergence2[i]);
-    }
 
-    if(!iteration.isEmpty()){
-        int maxIter = *std::max_element(iteration.begin(), iteration.end());
-        double maxCon1 = *std::max_element(convergence1.begin(), convergence1.end());
-        double maxCon2 = *std::max_element(convergence2.begin(), convergence2.end());
-        double minCon1 = *std::min_element(convergence1.begin(),convergence1.end());
-        double minCon2 = *std::min_element(convergence2.begin(),convergence2.end());
-        axisX->setRange(0,maxIter+4);
-        axisY1->setRange(minCon1,maxCon1);
-        axisY2->setRange(minCon2,maxCon2);
-    }
+    series_con1->append(iteration,convergence1);
+    series_con2->append(iteration,convergence2);
+
+
+    maxIteration = std::max(maxIteration,iteration);
+    maxCon1 = std::max(maxCon1,convergence1);
+    maxCon2 = std::max(maxCon2,convergence2);
+    minCon1 = std::min(minCon1,convergence1);
+    minCon2 = std::min(minCon2,convergence2);
+    axisX->setRange(0,maxIteration);
+    axisY1->setRange(minCon1,maxCon1);  
+    axisY2->setRange(minCon2,maxCon2);
 
     this->update();
 }

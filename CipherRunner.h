@@ -20,12 +20,13 @@ signals:
     void s_MessageToLog(const QByteArray& message);
     void s_ErrorToLog(const QByteArray& error);
     void s_Cal_Finished(int exitCode , QProcess::ExitStatus exitStatus);
-    void s_UpdateResidual(const QVector<double>& iteration,const QVector<double>& convergence1,const QVector<double>& convergence2);
+    void s_UpdateResidual(const int& iteration,const double& convergence1,const double& convergence2);
     void s_UpdateResult();
 
 private:
     QProcess* pro_cipher;
     QTimer* timer;
+    qint64 lastResFilePos;
 };
 
 

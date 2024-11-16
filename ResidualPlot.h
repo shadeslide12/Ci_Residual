@@ -12,9 +12,9 @@ Q_OBJECT
 public:
     explicit ResidualPlotter(QWidget* parent = nullptr);
 
-    void updateResidualPlot(const QVector<double>& iteration,
-                            const QVector<double>& convergence1,
-                            const QVector<double>& convergence2);
+    void updateResidualPlot(const int& iteration,
+                            const double& convergence1,
+                            const double& convergence2);
 private:
     QLineSeries* series_con1;
     QLineSeries* series_con2;
@@ -22,6 +22,9 @@ private:
     QValueAxis* axisY1;
     QValueAxis* axisY2;
 
+    double maxCon1,minCon1;
+    double maxCon2,minCon2;
+    int maxIteration;    
     //int currentIteration;
 
     void setupResidualPlot();
