@@ -5,7 +5,7 @@
 
 int main(int argc,char* argv[]){
     QApplication app(argc,argv);
-    QDir::setCurrent("$HOME/ZJUI_TEST/Rotor67");
+    QDir::setCurrent("/home/shadeslide/ZJUI_Test/Rotor67");
     MainWindow w;
     w.show();
     return app.exec();
