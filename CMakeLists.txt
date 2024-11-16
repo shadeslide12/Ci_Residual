@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(QtTest)
+project(CI_Res)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)

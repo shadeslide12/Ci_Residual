@@ -4,7 +4,7 @@
 #include <QString>
 #include <QFile>
 #include <QTextStream>
-
+#include <QDebug>
 CipherRunner::CipherRunner(QWidget *parent) :
         pro_cipher(new QProcess(this)),
         timer(new QTimer(this)),
@@ -40,19 +40,19 @@ void CipherRunner::recordError() {
     emit s_ErrorToLog(QByteArray("[Error: ]") + errorMessage);
 }
 
-void CipherRunner::updateResidual() {
-
+void CipherRunner:: updateResidual() {
     QFile histFile("./hist.dat");
-    if(! (histFile.open(QIODevice::ReadOnly | QIODevice::Text) ))
+    if(! (histFile.open(QIODevice::ReadOnly | QIODevice::Text) )) {
+        qDebug() << "read failed";
         return;
-    histFile.seek(lastResFilePos);
+    }
     QTextStream in (&histFile);
+    in.seek(lastResFilePos);
 
     if(!in.atEnd() ){
         QString line = in.readLine();
         QStringList data  = line.split(" ",Qt::SkipEmptyParts);
-
-        if(data.size()== 4 ){
+        if(data.size()>= 4 ){
             int iteration = data[1].toInt();
             double convergence1 = data[2].toDouble();
             double convergence2 = data[3].toDouble();
@@ -60,7 +60,7 @@ void CipherRunner::updateResidual() {
         }
     }
 
-    lastResFilePos = histFile.pos();
+    lastResFilePos = in.pos();
     histFile.close();
 
 }
