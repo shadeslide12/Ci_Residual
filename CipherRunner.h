@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
+#include <QFile>
 
 class CipherRunner: public QObject{
 Q_OBJECT
@@ -27,6 +28,7 @@ private:
     QProcess* pro_cipher;
     QTimer* timer;
     qint64 lastResFilePos;
+    QFile dataFile;
 };
 
 

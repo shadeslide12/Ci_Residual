@@ -5,11 +5,11 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+//
 CipherRunner::CipherRunner(QWidget *parent) :
         pro_cipher(new QProcess(this)),
         timer(new QTimer(this)),
         lastResFilePos(0) {
-
     connect(pro_cipher,&QProcess::readyReadStandardOutput,this,&CipherRunner::updateLogger);
     connect(pro_cipher,&QProcess::readyReadStandardError,this,&CipherRunner::recordError);
     connect(pro_cipher,QOverload<int,QProcess::ExitStatus>::of(&QProcess::finished),
@@ -17,12 +17,18 @@ CipherRunner::CipherRunner(QWidget *parent) :
                 timer->stop();
                 lastResFilePos = 0;
                 emit s_Cal_Finished(exitCode, exitStatus);
+                dataFile.close();
             });
     connect(timer,&QTimer::timeout,this,&CipherRunner::updateResidual);
 }
 
 
 void CipherRunner::runCipher() {
+    dataFile.setFileName("./hist.dat");
+    if(! (dataFile.open(QIODevice::ReadOnly | QIODevice::Text) )) {
+        qDebug() << "read dataFile failed";
+        return;
+    }
     lastResFilePos =0;
     QStringList argument;
     argument << "-np" << "4" << "./cipher-1.0.5";
@@ -41,12 +47,8 @@ void CipherRunner::recordError() {
 }
 
 void CipherRunner:: updateResidual() {
-    QFile histFile("./hist.dat");
-    if(! (histFile.open(QIODevice::ReadOnly | QIODevice::Text) )) {
-        qDebug() << "read failed";
-        return;
-    }
-    QTextStream in (&histFile);
+
+    QTextStream in (&dataFile);
     in.seek(lastResFilePos);
 
     if(!in.atEnd() ){
@@ -61,7 +63,6 @@ void CipherRunner:: updateResidual() {
     }
 
     lastResFilePos = in.pos();
-    histFile.close();
 
 }
 
